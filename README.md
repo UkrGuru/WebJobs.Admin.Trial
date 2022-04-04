@@ -1,0 +1,1 @@
+# UkrGuru.WebJobs.Admin.Trial

@@ -1,0 +1,93 @@
+﻿@*
+    Copyright (c) Oleksandr Viktor (UkrGuru). All rights reserved.
+    Licensed under the MIT License. See License.txt in the project root for license information.
+*@
+
+@inherits WJaAuthComponentBase
+@using Microsoft.Extensions.Logging;
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = "Logs";
+}
+
+<WJaTitleErrMsg Title="@Title" ErrMsg="@ErrMsg" />
+
+<TelerikGrid Data=@GridData ShowColumnMenu="true" Resizable="true" Class="smallerFont">
+    <GridToolBar>
+        <TelerikDatePicker Max="DateTime.Today" Value="@Today"
+                            ValueChanged="@((DateTime d) => TodayChangedHandler(d))"></TelerikDatePicker>
+        Page:
+        <TelerikNumericTextBox Value="@PageIndex" Width="100px"
+                                ValueChanged="@((int i) => PageIndexChangedHandler(i))"></TelerikNumericTextBox>
+        Size:
+        <TelerikNumericTextBox Value="@PageSize" Width="100px"
+                                ValueChanged="@((int i) => PageSizeChangedHandler(i))"></TelerikNumericTextBox>
+        <TelerikButton Icon="refresh" OnClick="@Refresh" Title="Refresh" ThemeColor="@(ThemeConstants.Button.ThemeColor.Primary)"></TelerikButton>
+    </GridToolBar>
+    <GridColumns>
+        <GridColumn Field=@nameof(Log.Logged) DisplayFormat="{0:HH:mm:ss.fff}" Width="125px" />
+        <GridColumn Field=@nameof(Log.LogLevel) Title="Level" Width="125px">
+            <Template>
+                @{
+                    var log = context as Log;
+                    if (log != null)
+                    {
+                        <span class='badge bg-@(LogLevel2Css(log.LogLevel))'>@(log.LogLevel)</span>
+                    }
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn Field=@nameof(Log.Title) Title="Title" Width="350px" />
+        <GridColumn Field=@nameof(Log.LogMore) Title="More" />
+    </GridColumns>
+</TelerikGrid>
+@code {
+    DateTime Today { get; set; } = DateTime.Today;
+    int PageIndex { get; set; } = 1;
+    int PageSize { get; set; } = 100;
+
+    List<Log> GridData { get; set; }
+
+    protected override async Task LoadData()
+    {
+        if (PageIndex <= 0) PageIndex = 1;
+        if (PageSize <= 0) PageSize = 100;
+
+        GridData = await DbHelper.FromProcAsync<List<Log>>("WJa_WJbLogs_Grd", new { Today, PageIndex, PageSize });
+    }
+
+    async Task TodayChangedHandler(DateTime input)
+    {
+        Today = input; PageIndex = 1;
+        await LoadData();
+    }
+
+    async Task PageIndexChangedHandler(int index)
+    {
+        PageIndex = index;
+        await LoadData();
+    }
+
+    async Task PageSizeChangedHandler(int size)
+    {
+        PageSize = size;
+        await LoadData();
+    }
+
+    protected string LogLevel2Css(LogLevel logLevel)
+    {
+        switch (logLevel)
+        {
+            case LogLevel.Critical:
+            case LogLevel.Error:
+                return "danger";
+            case LogLevel.Warning:
+                return "warning";
+            case LogLevel.Information:
+                return "info";
+            default:
+                return "secondary";
+        }
+    }
+}

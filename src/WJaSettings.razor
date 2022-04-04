@@ -1,0 +1,70 @@
+﻿@*
+Copyright (c) Oleksandr Viktor (UkrGuru). All rights reserved.
+Licensed under the MIT License. See License.txt in the project root for license information.
+*@
+
+@inherits WJaAuthComponentBase
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = "Settings";
+}
+
+<WJaTitleErrMsg Title="@Title" ErrMsg="@ErrMsg" />
+
+<TelerikGrid Data=@GridData ShowColumnMenu="true" Resizable="true" Class="smallerFont" EditMode="@GridEditMode.Inline" 
+             OnCreate="@CreateHandler" OnUpdate="@UpdateHandler" OnDelete="@DeleteHandler" ConfirmDelete="true">
+    <GridToolBar>
+        <GridCommandButton Command="Add" Icon="add" ThemeColor="@(ThemeConstants.Button.ThemeColor.Primary)">New Item</GridCommandButton>
+        <TelerikButton Icon="refresh" OnClick="@Refresh" Title="Refresh"></TelerikButton>
+    </GridToolBar>
+    <GridColumns>
+        <GridColumn Field=@nameof(SettingItem.Name)></GridColumn>
+        <GridColumn Field=@nameof(SettingItem.Value)>
+            <EditorTemplate>
+                @{  
+                    EditItem = context as SettingItem;
+                    <TelerikTextArea @bind-Value="EditItem.Value" PlaceHolder="Enter Value here"></TelerikTextArea>
+                }
+            </EditorTemplate>
+        </GridColumn>
+        <GridCommandColumn Width="150px" ShowColumnMenu="false">
+            <GridCommandButton Command="Edit" Icon="edit" ThemeColor="@(ThemeConstants.Button.ThemeColor.Primary)">Edit</GridCommandButton>
+            <GridCommandButton Command="Delete" Icon="delete" Title="Delete"></GridCommandButton>
+            <GridCommandButton Command="Save" Icon="save" ThemeColor="@(ThemeConstants.Button.ThemeColor.Primary)" ShowInEdit="true">Save</GridCommandButton>
+            <GridCommandButton Command="Cancel" Icon="cancel" ShowInEdit="true" Title="Cancel"></GridCommandButton>
+        </GridCommandColumn>
+    </GridColumns>
+</TelerikGrid>
+
+<style>
+    textarea.k-input-inner {
+        min-height: 10em;
+    }
+</style>
+
+@code {
+    public class SettingItem
+    {
+        [Required]
+        [StringLength(50)]
+        [Display(Name = "Name")]
+        public string Name { get; set; }
+
+        [Required]
+        [Display(Name = "Value")]
+        public string Value { get; set; }
+    } 
+
+    List<SettingItem> GridData { get; set; }
+
+    SettingItem EditItem { get; set; }
+
+    protected override async Task LoadData() => GridData = await DbHelper.FromProcAsync<List<SettingItem>>("WJa_WJbSettings_Grd");
+
+    protected override async Task InsItemAsync(GridCommandEventArgs args) => await DbHelper.ExecProcAsync("WJbSettings_Set", (SettingItem)args.Item);
+
+    protected override async Task UpdItemAsync(GridCommandEventArgs args) => await DbHelper.ExecProcAsync("WJbSettings_Set", (SettingItem)args.Item);
+
+    protected override async Task DelItemAsync(GridCommandEventArgs args) => await DbHelper.ExecProcAsync("WJa_WJbSettings_Del", ((SettingItem)args.Item)?.Name);
+}

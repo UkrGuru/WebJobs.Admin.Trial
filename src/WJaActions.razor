@@ -1,0 +1,80 @@
+﻿@*
+Copyright (c) Oleksandr Viktor (UkrGuru). All rights reserved.
+Licensed under the MIT License. See License.txt in the project root for license information.
+*@
+
+@inherits WJaAuthComponentBase
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = "Actions";
+}    
+
+<WJaTitleErrMsg Title="@Title" ErrMsg="@ErrMsg" />
+
+<TelerikGrid Data=@GridData ShowColumnMenu="true" Resizable="true" Class="smallerFont" EditMode="@GridEditMode.Inline" 
+             OnCreate="@CreateHandler" OnUpdate="@UpdateHandler" OnDelete="@DeleteHandler" ConfirmDelete="true">
+    <GridToolBar>
+        <GridCommandButton Command="Add" Icon="add" ThemeColor="@(ThemeConstants.Button.ThemeColor.Primary)">New Action</GridCommandButton>
+        <TelerikButton Icon="refresh" OnClick="@Refresh" Title="Refresh"></TelerikButton>
+    </GridToolBar>
+    <GridColumns>
+        <GridColumn Field=@nameof(ActionInput.ActionName) Title="Action Name" Width="150px" />
+        <GridColumn Field=@nameof(ActionInput.ActionType) Title="Action Type" />
+        <GridColumn Field=@nameof(ActionInput.ActionMore) Title="More">
+            <EditorTemplate>
+                @{  
+                    EditItem = context as ActionInput; 
+                    <TelerikTextArea @bind-Value="EditItem.ActionMore" PlaceHolder="Enter More settings in JSON here"></TelerikTextArea>
+                }
+            </EditorTemplate>
+        </GridColumn>
+        <GridCommandColumn Width="150px" ShowColumnMenu="false">
+            <GridCommandButton Command="Edit" Icon="edit" ThemeColor="@(ThemeConstants.Button.ThemeColor.Primary)">Edit</GridCommandButton>
+            <GridCommandButton Command="Delete" Icon="delete" Title="Delete"></GridCommandButton>
+            <GridCommandButton Command="Save" Icon="save" ThemeColor="@(ThemeConstants.Button.ThemeColor.Primary)" ShowInEdit="true">Save</GridCommandButton>
+            <GridCommandButton Command="Cancel" Icon="cancel" ShowInEdit="true" Title="Cancel"></GridCommandButton>
+        </GridCommandColumn>
+    </GridColumns>
+</TelerikGrid>
+
+<style>
+    textarea.k-input-inner {
+        min-height: 10em;
+    }
+</style>
+
+@code {
+    public class ActionInput
+    {
+        [Display(Name = "Id")]
+        public int ActionId { get; set; }
+
+        [Required]
+        [StringLength(100)]
+        [Display(Name = "Action")]
+        public string ActionName { get; set; }
+
+        [Required]
+        [StringLength(255)]
+        [Display(Name = "Type")]
+        public string ActionType { get; set; }
+
+        [Display(Name = "More")]
+        public string ActionMore { get; set; }
+
+        public bool Disabled { get; set; }
+    }
+
+    List<ActionInput> GridData { get; set; }
+
+    ActionInput EditItem { get; set; }
+
+    protected override async Task LoadData() => GridData = await DbHelper.FromProcAsync<List<ActionInput>>("WJa_WJbActions_Grd");
+
+    protected override async Task InsItemAsync(GridCommandEventArgs args) => await DbHelper.ExecProcAsync("WJa_WJbActions_Ins", (ActionInput)args.Item);
+
+    protected override async Task UpdItemAsync(GridCommandEventArgs args) => await DbHelper.ExecProcAsync("WJa_WJbActions_Upd", (ActionInput)args.Item);
+
+    protected override async Task DelItemAsync(GridCommandEventArgs args) => await DbHelper.ExecProcAsync("WJa_WJbActions_Del", ((ActionInput)args.Item)?.ActionId);
+}

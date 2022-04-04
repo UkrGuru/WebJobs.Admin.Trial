@@ -1,0 +1,15 @@
+﻿<h2 class="text-capitalize">@Title</h2>
+@if (!String.IsNullOrEmpty(ErrMsg))
+{
+    var errMsgClass = ErrMsg.StartsWith("Error") ? "danger" : "success";
+    <div class="alert alert-@errMsgClass" role="alert">
+        @ErrMsg
+    </div>
+}
+@code {
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public string ErrMsg { get; set; }
+}

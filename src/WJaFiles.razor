@@ -1,0 +1,115 @@
+﻿@*
+Copyright (c) Oleksandr Viktor (UkrGuru). All rights reserved.
+Licensed under the MIT License. See License.txt in the project root for license information.
+*@
+
+@inherits WJaAuthComponentBase
+@inject IJSRuntime JsRuntime
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = "Files";
+}    
+
+<WJaTitleErrMsg Title="@Title" ErrMsg="@ErrMsg" />
+
+<TelerikGrid Data=@GridData ShowColumnMenu="true" Resizable="true" Class="smallerFont">
+    <GridToolBar>
+        <TelerikTextBox Value="@Filter.Search" OnChange="@SearchOnChangeHandler" PlaceHolder="Filter by Id/CreatedDate" Width="400px"></TelerikTextBox>
+        Page:
+        <TelerikNumericTextBox Value="@Filter.PageIndex" Width="100px"
+                            ValueChanged="@((int i) => PageIndexChangedHandler(i))"></TelerikNumericTextBox>
+        Size:
+        <TelerikNumericTextBox Value="@Filter.PageSize" Width="100px"
+                            ValueChanged="@((int i) => PageSizeChangedHandler(i))"></TelerikNumericTextBox>
+        <TelerikButton Icon="refresh" OnClick="@Refresh" Title="Refresh" ThemeColor="@(ThemeConstants.Button.ThemeColor.Primary)"></TelerikButton>
+    </GridToolBar>
+    <GridColumns>
+        <GridColumn Field=@nameof(File.Id) />
+        <GridColumn Field=@nameof(File.Created) DisplayFormat="{0:dd/MM/yyyy HH:mm:ss.fff}" />
+        <GridColumn Field=@nameof(File.FileName) Title="FileName" />
+        <GridColumn Width="45px">
+            <Template>
+                @{ 
+                    var file = context as File; 
+                    if (file != null)
+                    {
+                        <TelerikButton OnClick="@((args) => DownloadFile(file))" ButtonType="ButtonType.Button"
+                            Icon="download" Title="Download File" Class="k-button-small"></TelerikButton>
+                    }
+                }
+            </Template>
+        </GridColumn>
+    </GridColumns>
+</TelerikGrid>
+@code {
+    class FileFilter
+    {
+        public string Search { get; set; }
+        public Guid? Id { get; set; }
+        public DateTime? Created { get; set; }
+        public int PageIndex { get; set; }
+        public int PageSize { get; set; }
+    }
+
+    FileFilter Filter { get; set; } = new() { PageIndex = 1, PageSize = 100 };
+
+    List<File> GridData { get; set; }
+
+    protected override async Task LoadData()
+    {
+        if (Filter.PageIndex <= 0) Filter.PageIndex = 1;
+        if (Filter.PageSize <= 0) Filter.PageSize = 100;
+
+        GridData = await DbHelper.FromProcAsync<List<File>>("WJa_WJbFiles_Grd", 
+            new { Filter.Id, Created = Filter.Created?.Date, Filter.PageIndex, Filter.PageSize });
+    }
+
+    async Task SearchOnChangeHandler(object search)
+    {
+        if (Filter.Search == Convert.ToString(search)) return;
+
+        Filter.Search = Convert.ToString(search);
+
+        Filter.Id = null; Filter.Created = null;
+
+        if (Guid.TryParse(Filter.Search, out var id))
+            Filter.Id = id;
+        else if (DateTime.TryParse(Filter.Search, out var dt))
+            Filter.Created = dt;
+
+        await LoadData();
+    }
+
+    async Task PageIndexChangedHandler(int index)
+    {
+        Filter.PageIndex = index;
+        await LoadData();
+    }
+
+    async Task PageSizeChangedHandler(int size)
+    {
+        Filter.PageSize = size;
+        await LoadData();
+    }
+
+    private async Task DownloadFile(File file)
+    {
+        try
+        {
+            if (file != null)
+            {
+                file = await DbHelper.FromProcAsync<File>("WJbFiles_Get", file?.Id);
+
+                if (file?.FileContent != null && file?.FileName != null)
+                    await FileExporter.SaveAsync(JsRuntime, file.FileContent, file.FileName);
+            }
+
+        }
+        catch (Exception ex)
+        {
+            ErrMsg = $"Error: {ex.Message}";
+            //await LogHelper.LogErrorAsync($"/WJbFiles/ViewLogs/{file?.FileId}", ErrMsg);
+        }
+    }
+}

@@ -1,0 +1,90 @@
+﻿<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">WebJobsAdmin</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    <nav class="flex-column min250">
+        <ul class="nav flex-column">
+            <AuthorizeView>
+                <NotAuthorized>
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                            <span class="oi oi-home" aria-hidden="true"></span> Home
+                        </NavLink>
+                    </li>
+                </NotAuthorized>
+            </AuthorizeView>
+            <AuthorizeView>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="webjobs" @onclick="@((args) => ExpandNavMenu("webjobs"))">
+                        <span class="oi oi-layers" aria-hidden="true"></span> WebJobs
+                    </NavLink>
+                    @if (IsExpandNavMenu("webjobs"))
+                    {
+                        <NavLink class="nav-link" href="webjobs/jobs">
+                            <span class="oi" aria-hidden="true"></span> Jobs
+                        </NavLink>
+                        <NavLink class="nav-link" href="webjobs/rules">
+                            <span class="oi" aria-hidden="true"></span> Rules
+                        </NavLink>
+                        <NavLink class="nav-link" href="webjobs/actions">
+                            <span class="oi" aria-hidden="true"></span> Actions
+                        </NavLink>
+                    }
+                </li>
+            </AuthorizeView> 
+            <AuthorizeView>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="files">
+                        <span class="oi oi-data-transfer-download" aria-hidden="true"></span> Files
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="logs">
+                        <span class="oi oi-spreadsheet" aria-hidden="true"></span> Logs
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="settings">
+                        <span class="oi oi-cog" aria-hidden="true"></span> Settings
+                    </NavLink>
+                </li>
+            </AuthorizeView> 
+        </ul>
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    private string? subMenu; bool expandSubMenu;
+
+    private void ExpandNavMenu(string menu)
+    {
+        if (subMenu == null || subMenu != menu)
+        {
+            subMenu = menu; expandSubMenu = true;
+        }
+        else if (subMenu == menu)
+        {
+            subMenu = null; expandSubMenu = false;
+        }
+    }
+
+    private bool IsExpandNavMenu(string menu)
+    {
+        return (subMenu == menu) && expandSubMenu;
+    }
+}

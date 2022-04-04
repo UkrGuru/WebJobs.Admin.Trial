@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32328.378
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WJaDemo", "WJaDemo\WJaDemo.csproj", "{0AB7B048-5297-4D8E-B9BD-F9120989D0AF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebJobsAdmin", "..\src\WebJobsAdmin.csproj", "{46751A0E-0809-4408-9754-0EA589119F6D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0AB7B048-5297-4D8E-B9BD-F9120989D0AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0AB7B048-5297-4D8E-B9BD-F9120989D0AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0AB7B048-5297-4D8E-B9BD-F9120989D0AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0AB7B048-5297-4D8E-B9BD-F9120989D0AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46751A0E-0809-4408-9754-0EA589119F6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46751A0E-0809-4408-9754-0EA589119F6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46751A0E-0809-4408-9754-0EA589119F6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46751A0E-0809-4408-9754-0EA589119F6D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F1178E03-DE99-4D73-A538-67EA096D456B}
+	EndGlobalSection
+EndGlobal

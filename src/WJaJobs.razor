@@ -1,0 +1,207 @@
+﻿@*
+Copyright (c) Oleksandr Viktor (UkrGuru). All rights reserved.
+Licensed under the MIT License. See License.txt in the project root for license information.
+*@
+
+@inherits WJaAuthComponentBase
+@using Microsoft.Extensions.Logging;
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = "Jobs";
+}
+
+<WJaTitleErrMsg Title="@Title" ErrMsg="@ErrMsg" />
+
+<TelerikGrid Data=@GridData ShowColumnMenu="true" Resizable="true" Class="smallerFont">
+    <GridToolBar>
+        <TelerikDatePicker Max="DateTime.Today" Value="@Today"
+                            ValueChanged="@((DateTime d) => TodayChangedHandler(d))"></TelerikDatePicker>
+        Page:
+        <TelerikNumericTextBox Value="@PageIndex" Width="100px"
+                                ValueChanged="@((int i) => PageIndexChangedHandler(i))"></TelerikNumericTextBox>
+        Size:
+        <TelerikNumericTextBox Value="@PageSize" Width="100px"
+                                ValueChanged="@((int i) => PageSizeChangedHandler(i))"></TelerikNumericTextBox>
+        <TelerikButton Icon="refresh" OnClick="@Refresh" Title="Refresh" ThemeColor="@(ThemeConstants.Button.ThemeColor.Primary)"></TelerikButton>
+    </GridToolBar>
+    <GridColumns>
+        <GridColumn Field=@nameof(Job.JobId) Width="85px" />
+        <GridColumn Field=@nameof(Job.Created) DisplayFormat="{0:HH:mm:ss.fff}" Width="100px" />
+        <GridColumn Field=@nameof(Job.RuleName) Title="Rule" Width="150px" />
+        <GridColumn Field=@nameof(Job.JobPriority) Width="100px" />
+        <GridColumn Field=@nameof(Job.Started) DisplayFormat="{0:HH:mm:ss.fff}" Width="100px" />
+        <GridColumn Field=@nameof(Job.Finished) DisplayFormat="{0:HH:mm:ss.fff}" Width="100px" />
+        <GridColumn Field=@nameof(Job.ActionName) Title="Action" Width="150px" />
+        <GridColumn Field=@nameof(Job.JobMore) Title="Rule/Job More" />
+        <GridColumn Field=@nameof(Job.JobStatus) Title="Status" Width="100px">
+            <Template>
+                @{  
+                    var job = context as Job;
+                    <span class='badge bg-@(StatusBadge(job.JobStatus))'>@job.JobStatus</span>
+                    if (job.JobStatus == JobStatus.Failed)
+                    {
+                        <TelerikButton OnClick="@((args) => RetryJob(job))" ButtonType="ButtonType.Button"
+                            Icon="refresh" Title="Retry Job" Class="k-button-small RedText"></TelerikButton>
+                    }
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn Width="45px">
+            <Template>
+                @{ 
+                    var job = context as Job; 
+                    <TelerikButton OnClick="@((args) => ViewLogs(job))" ButtonType="ButtonType.Button"
+                        Icon="preview" Title="View Logs" Class="k-button-small"></TelerikButton>
+                }
+            </Template>
+        </GridColumn>
+    </GridColumns>
+</TelerikGrid>
+<TelerikWindow @bind-Visible="@WindowVisible" Centered="true" Modal="true" Width="75vw">
+    <WindowTitle>
+        <strong>@WinTitle</strong>
+    </WindowTitle>
+    <WindowActions>
+        <WindowAction Name="Close" />
+    </WindowActions>
+    <WindowContent>
+        <TelerikGrid Data=@Logs ShowColumnMenu="true" Resizable="true" Class="smallerFont">
+            <GridColumns>
+                <GridColumn Field=@nameof(Log.Logged) DisplayFormat="{0:HH:mm:ss.fff}" Width="100px" />
+                <GridColumn Field=@nameof(Log.LogLevel) Title="Level" Width="75px">
+                    <Template>
+                        @{ 
+                            var log = context as Log; 
+                            <span class='badge bg-@(LogLevelBadge(log.LogLevel))'>@(log.LogLevel)</span>
+                        }
+                    </Template>
+                </GridColumn>
+                <GridColumn Field=@nameof(Log.Title) Title="Title" Width="225px" />
+                <GridColumn Field=@nameof(Log.LogMore) Title="More">
+                    <Template>
+                        @{ 
+                            var log = context as Log; 
+                            <span class='text-@(LogLevelText(log.LogLevel)) text-break'>@(log.LogMore)</span>
+                        }
+                    </Template>
+                </GridColumn>
+            </GridColumns>
+        </TelerikGrid>
+    </WindowContent>
+</TelerikWindow>
+
+@code {
+    DateTime Today { get; set; } = DateTime.Today;
+    int PageIndex { get; set; } = 1;
+    int PageSize { get; set; } = 100;
+
+    List<Job> GridData { get; set; }
+
+    List<Log> Logs { get; set; }
+
+    string WinTitle { get; set; }
+    bool WindowVisible { get { return !string.IsNullOrEmpty(WinTitle); } set { if (!value) WinTitle = null; } }
+
+    protected override async Task LoadData()
+    {
+        if (PageIndex <= 0) PageIndex = 1;
+        if (PageSize <= 0) PageSize = 100;
+
+        GridData = await DbHelper.FromProcAsync<List<Job>>("WJa_WJbJobs_Grd", new { Today, PageIndex, PageSize });
+    }
+
+    async Task TodayChangedHandler(DateTime input)
+    {
+        Today = input; PageIndex = 1;
+        await LoadData();
+    }
+
+    async Task PageIndexChangedHandler(int index)
+    {
+        PageIndex = index;
+        await LoadData();
+    }
+
+    async Task PageSizeChangedHandler(int size)
+    {
+        PageSize = size;
+        await LoadData();
+    }
+
+    async Task RetryJob(Job selectedItem)
+    {
+        var item = await DbHelper.FromProcAsync<Job>("WJbHistory_Retry", selectedItem?.JobId);
+
+        if (item != null)
+        {
+            GridData?.Remove(selectedItem);
+            if (!string.IsNullOrEmpty(item.RuleName)) GridData?.Insert(0, item);
+        }
+    }
+
+    private async Task ViewLogs(Job job)
+    {
+        try
+        {
+            WinTitle = $"Job #{job?.JobId}";
+
+            Logs = await DbHelper.FromProcAsync<List<Log>>("WJa_WJbLogs_Grd_Job", job?.JobId);
+        }
+        catch (Exception ex)
+        {
+            ErrMsg = $"Error: {ex.Message}";
+            await LogHelper.LogErrorAsync($"/WJbJobs/ViewLogs/{job?.JobId}", ErrMsg);
+        }
+    }
+
+    protected string LogLevelBadge(LogLevel logLevel)
+    {
+        switch (logLevel)
+        {
+            case LogLevel.Critical:
+            case LogLevel.Error:
+                return "danger";
+            case LogLevel.Warning:
+                return "warning";
+            case LogLevel.Information:
+                return "info";
+            default:
+                return "secondary";
+        }
+    }
+
+    protected string LogLevelText(LogLevel logLevel)
+    {
+        switch (logLevel)
+        {
+            case LogLevel.Critical:
+            case LogLevel.Error:
+                return "danger";
+            case LogLevel.Warning:
+                return "warning";
+            default:
+                return "secondary";
+        }
+    }
+
+    protected string StatusBadge(JobStatus status)
+    {
+        switch (status)
+        {
+            case JobStatus.Failed:
+            case JobStatus.Cancelled:
+                return "danger";
+
+            case JobStatus.Completed:
+                return "success";
+
+            case JobStatus.Queued:
+            case JobStatus.Running:
+                return "warning";
+
+            default:
+                return "secondary";
+        }
+    }
+}

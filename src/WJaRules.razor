@@ -1,0 +1,102 @@
+﻿@*
+Copyright (c) Oleksandr Viktor (UkrGuru). All rights reserved.
+Licensed under the MIT License. See License.txt in the project root for license information.
+*@
+
+@inherits WJaAuthComponentBase
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = "Rules";
+}
+
+<WJaTitleErrMsg Title="@Title" ErrMsg="@ErrMsg" />
+
+<TelerikGrid Data=@GridData ShowColumnMenu="true" Resizable="true" Class="smallerFont" EditMode="@GridEditMode.Inline" 
+             OnCreate="@CreateHandler" OnUpdate="@UpdateHandler" OnDelete="@DeleteHandler" ConfirmDelete="true">
+    <GridToolBar>
+        <GridCommandButton Command="Add" Icon="add" ThemeColor="@(ThemeConstants.Button.ThemeColor.Primary)">New Rule</GridCommandButton>
+        <TelerikButton Icon="refresh" OnClick="@Refresh" Title="Refresh"></TelerikButton>
+    </GridToolBar>
+    <GridColumns>
+        <GridColumn Field=@nameof(Rule.RuleId) Title="Id" Width="75px" Editable="false" />
+        <GridColumn Field=@nameof(Rule.RuleName) Title="Rule Name" Width="250px" />
+        <GridColumn Field=@nameof(Rule.ActionName) Title="Action" Width="175px">
+            <EditorTemplate>
+                @{
+                    EditItem = context as RuleInput; 
+                    <TelerikDropDownList Data="@Actions" @bind-Value="EditItem.ActionId" Id="actionId" DefaultText="Choose Action"
+                                            ValueField="ActionId" TextField="ActionName" Class="w-100">
+                    </TelerikDropDownList>
+                }
+            </EditorTemplate>
+        </GridColumn>
+        <GridColumn Field=@nameof(Rule.RuleMore) Title="More">
+            <EditorTemplate>
+                @{  
+                    EditItem = context as RuleInput; 
+                    <TelerikTextArea @bind-Value="EditItem.RuleMore" PlaceHolder="Enter More settings in JSON here"></TelerikTextArea>
+                }
+            </EditorTemplate>
+        </GridColumn>
+        <GridColumn Field=@nameof(Rule.RulePriority) Width="150px" />
+        <GridColumn Field=@nameof(Rule.Disabled) Width="150px" />
+        <GridCommandColumn Width="150px" ShowColumnMenu="false">
+            <GridCommandButton Command="Edit" Icon="edit" ThemeColor="@(ThemeConstants.Button.ThemeColor.Primary)">Edit</GridCommandButton>
+            <GridCommandButton Command="Delete" Icon="delete" Title="Delete"></GridCommandButton>
+            <GridCommandButton Command="Save" Icon="save" ThemeColor="@(ThemeConstants.Button.ThemeColor.Primary)" ShowInEdit="true">Save</GridCommandButton>
+            <GridCommandButton Command="Cancel" Icon="cancel" ShowInEdit="true" Title="Cancel"></GridCommandButton>
+        </GridCommandColumn>
+    </GridColumns>
+</TelerikGrid>
+
+<style>
+    textarea.k-input-inner {
+        min-height: 10em;
+    }
+</style>
+
+@code {
+    public partial class RuleInput
+    {
+        [Display(Name = "Id")]
+        public int RuleId { get; set; }
+
+        [Required]
+        [StringLength(100)]
+        [Display(Name = "Rule")]
+        public string RuleName { get; set; }
+
+        [Required]
+        [Display(Name = "Action")]
+        public int? ActionId { get; set; }
+
+        public string ActionName { get; set; }
+
+        [Display(Name = "More")]
+        public string RuleMore { get; set; }
+
+        [Required]
+        [Display(Name = "Priority")]
+        public Priorities? RulePriority { get; set; } = Priorities.Normal;
+
+        public bool Disabled { get; set; }
+
+    }
+
+    List<Data.Action> Actions { get; set; }
+
+    List<RuleInput> GridData { get; set; }
+
+    RuleInput EditItem { get; set; }
+
+    protected override async Task InitData() => Actions = await DbHelper.FromProcAsync<List<Data.Action>>("WJa_WJbActions_Grd");
+
+    protected override async Task LoadData() => GridData = await DbHelper.FromProcAsync<List<RuleInput>>("WJa_WJbRules_Grd");
+
+    protected override async Task InsItemAsync(GridCommandEventArgs args) => await DbHelper.ExecProcAsync("WJa_WJbRules_Ins", (RuleInput)args.Item);
+
+    protected override async Task UpdItemAsync(GridCommandEventArgs args) => await DbHelper.ExecProcAsync("WJa_WJbRules_Upd", (RuleInput)args.Item);
+
+    protected override async Task DelItemAsync(GridCommandEventArgs args) => await DbHelper.ExecProcAsync("WJa_WJbRules_Del", ((RuleInput)args.Item)?.RuleId);
+}
