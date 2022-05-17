@@ -1,0 +1,26 @@
+div.smallerFont,
+div.smallerFont .k-filtercell * {
+    font-size: 14px;
+}
+
+    div.smallerFont .k-dropdown.k-header.k-dropdown-operator {
+        width: calc(11px + 2em) !important;
+    }
+
+    div.smallerFont .k-textbox {
+        padding: .375rem .25rem;
+    }
+
+.k-grid th {
+    font-weight: bold;
+    padding: 0.5rem 0.25rem;
+}
+
+.k-grid-header .k-grid-filter, .k-grid-header .k-header-column-menu {
+    padding: 0rem;
+    width: 0rem;
+}
+
+.k-grid-header .k-with-icon, .k-grid-header .k-filterable {
+    padding-right: 0rem;
+}

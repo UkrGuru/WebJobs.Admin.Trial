@@ -5,11 +5,6 @@ Licensed under the MIT License. See License.txt in the project root for license 
 
 @inherits WJaAuthComponentBase
 
-@code {
-    [Parameter]
-    public string Title { get; set; } = "Settings";
-}
-
 <WJaTitleErrMsg Title="@Title" ErrMsg="@ErrMsg" />
 
 <TelerikGrid Data=@GridData ShowColumnMenu="true" Resizable="true" Class="smallerFont" EditMode="@GridEditMode.Inline" 
@@ -17,12 +12,14 @@ Licensed under the MIT License. See License.txt in the project root for license 
     <GridToolBar>
         <GridCommandButton Command="Add" Icon="add" ThemeColor="@(ThemeConstants.Button.ThemeColor.Primary)">New Item</GridCommandButton>
         <TelerikButton Icon="refresh" OnClick="@Refresh" Title="Refresh"></TelerikButton>
+        <span class="k-toolbar-spacer"></span>
+        <GridSearchBox></GridSearchBox>
     </GridToolBar>
     <GridColumns>
         <GridColumn Field=@nameof(SettingItem.Name)></GridColumn>
         <GridColumn Field=@nameof(SettingItem.Value)>
             <EditorTemplate>
-                @{  
+                @{
                     EditItem = context as SettingItem;
                     <TelerikTextArea @bind-Value="EditItem.Value" PlaceHolder="Enter Value here"></TelerikTextArea>
                 }
@@ -39,7 +36,7 @@ Licensed under the MIT License. See License.txt in the project root for license 
 
 <style>
     textarea.k-input-inner {
-        min-height: 10em;
+    min-height: 10em;
     }
 </style>
 
@@ -54,11 +51,15 @@ Licensed under the MIT License. See License.txt in the project root for license 
         [Required]
         [Display(Name = "Value")]
         public string Value { get; set; }
-    } 
+    }
 
     List<SettingItem> GridData { get; set; }
 
     SettingItem EditItem { get; set; }
+
+    protected override object ID { get { return EditItem?.Name; } }
+
+    protected override async Task InitData() { Title = "Settings"; await Task.CompletedTask; }
 
     protected override async Task LoadData() => GridData = await DbHelper.FromProcAsync<List<SettingItem>>("WJa_WJbSettings_Grd");
 

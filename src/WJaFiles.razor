@@ -6,11 +6,6 @@ Licensed under the MIT License. See License.txt in the project root for license 
 @inherits WJaAuthComponentBase
 @inject IJSRuntime JsRuntime
 
-@code {
-    [Parameter]
-    public string Title { get; set; } = "Files";
-}    
-
 <WJaTitleErrMsg Title="@Title" ErrMsg="@ErrMsg" />
 
 <TelerikGrid Data=@GridData ShowColumnMenu="true" Resizable="true" Class="smallerFont">
@@ -28,10 +23,10 @@ Licensed under the MIT License. See License.txt in the project root for license 
         <GridColumn Field=@nameof(File.Id) />
         <GridColumn Field=@nameof(File.Created) DisplayFormat="{0:dd/MM/yyyy HH:mm:ss.fff}" />
         <GridColumn Field=@nameof(File.FileName) Title="FileName" />
-        <GridColumn Width="45px">
+        <GridColumn Width="45px" ShowColumnMenu="false">
             <Template>
                 @{ 
-                    var file = context as File; 
+                    var file = context as FileItem; 
                     if (file != null)
                     {
                         <TelerikButton OnClick="@((args) => DownloadFile(file))" ButtonType="ButtonType.Button"
@@ -52,16 +47,25 @@ Licensed under the MIT License. See License.txt in the project root for license 
         public int PageSize { get; set; }
     }
 
+    public class FileItem
+    {
+        public Guid Id { get; set; }
+        public DateTime Created { get; set; }
+        public string FileName { get; set; }   
+    }
+
     FileFilter Filter { get; set; } = new() { PageIndex = 1, PageSize = 100 };
 
-    List<File> GridData { get; set; }
+    List<FileItem> GridData { get; set; }
+
+    protected override async Task InitData() { Title = "Files"; await Task.CompletedTask; }
 
     protected override async Task LoadData()
     {
         if (Filter.PageIndex <= 0) Filter.PageIndex = 1;
         if (Filter.PageSize <= 0) Filter.PageSize = 100;
 
-        GridData = await DbHelper.FromProcAsync<List<File>>("WJa_WJbFiles_Grd", 
+        GridData = await DbHelper.FromProcAsync<List<FileItem>>("WJa_WJbFiles_Grd", 
             new { Filter.Id, Created = Filter.Created?.Date, Filter.PageIndex, Filter.PageSize });
     }
 
@@ -93,18 +97,17 @@ Licensed under the MIT License. See License.txt in the project root for license 
         await LoadData();
     }
 
-    private async Task DownloadFile(File file)
+    private async Task DownloadFile(FileItem item)
     {
         try
         {
-            if (file != null)
+            if (item != null)
             {
-                file = await DbHelper.FromProcAsync<File>("WJbFiles_Get", file?.Id);
+                var file = await DbHelper.FromProcAsync<File>("WJbFiles_Get", item.Id);
 
                 if (file?.FileContent != null && file?.FileName != null)
                     await FileExporter.SaveAsync(JsRuntime, file.FileContent, file.FileName);
             }
-
         }
         catch (Exception ex)
         {

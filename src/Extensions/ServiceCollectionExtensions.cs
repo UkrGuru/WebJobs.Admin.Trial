@@ -8,9 +8,9 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     public static class WebJobsAdminServiceCollectionExtensions
     {
-        public static void AddWebJobsAdmin(this IServiceCollection services, string connString, LogLevel logLevel = LogLevel.Debug, int nThreads = 4)
+        public static void AddWebJobsAdmin(this IServiceCollection services, string connectionString, LogLevel logLevel = LogLevel.Debug, int nThreads = 4)
         {
-            services.AddWebJobs(connString, logLevel, nThreads);
+            services.AddWebJobs(connectionString, logLevel, nThreads);
 
             Assembly.GetExecutingAssembly().InitDb();
         }

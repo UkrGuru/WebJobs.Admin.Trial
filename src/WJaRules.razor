@@ -5,11 +5,6 @@ Licensed under the MIT License. See License.txt in the project root for license 
 
 @inherits WJaAuthComponentBase
 
-@code {
-    [Parameter]
-    public string Title { get; set; } = "Rules";
-}
-
 <WJaTitleErrMsg Title="@Title" ErrMsg="@ErrMsg" />
 
 <TelerikGrid Data=@GridData ShowColumnMenu="true" Resizable="true" Class="smallerFont" EditMode="@GridEditMode.Inline" 
@@ -17,6 +12,8 @@ Licensed under the MIT License. See License.txt in the project root for license 
     <GridToolBar>
         <GridCommandButton Command="Add" Icon="add" ThemeColor="@(ThemeConstants.Button.ThemeColor.Primary)">New Rule</GridCommandButton>
         <TelerikButton Icon="refresh" OnClick="@Refresh" Title="Refresh"></TelerikButton>
+        <span class="k-toolbar-spacer"></span>
+        <GridSearchBox></GridSearchBox>
     </GridToolBar>
     <GridColumns>
         <GridColumn Field=@nameof(Rule.RuleId) Title="Id" Width="75px" Editable="false" />
@@ -35,7 +32,7 @@ Licensed under the MIT License. See License.txt in the project root for license 
             <EditorTemplate>
                 @{  
                     EditItem = context as RuleInput; 
-                    <TelerikTextArea @bind-Value="EditItem.RuleMore" PlaceHolder="Enter More settings in JSON here"></TelerikTextArea>
+                    <TelerikTextArea @bind-Value="EditItem.RuleMore" PlaceHolder="Enter More settings in json format here"></TelerikTextArea>
                 }
             </EditorTemplate>
         </GridColumn>
@@ -81,7 +78,6 @@ Licensed under the MIT License. See License.txt in the project root for license 
         public Priorities? RulePriority { get; set; } = Priorities.Normal;
 
         public bool Disabled { get; set; }
-
     }
 
     List<Data.Action> Actions { get; set; }
@@ -90,7 +86,9 @@ Licensed under the MIT License. See License.txt in the project root for license 
 
     RuleInput EditItem { get; set; }
 
-    protected override async Task InitData() => Actions = await DbHelper.FromProcAsync<List<Data.Action>>("WJa_WJbActions_Grd");
+    protected override object ID { get { return EditItem?.RuleId; } }
+
+    protected override async Task InitData() { Title = "Rules"; Actions = await DbHelper.FromProcAsync<List<Data.Action>>("WJa_WJbActions_Grd"); }
 
     protected override async Task LoadData() => GridData = await DbHelper.FromProcAsync<List<RuleInput>>("WJa_WJbRules_Grd");
 

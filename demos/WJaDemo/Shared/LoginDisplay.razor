@@ -1,6 +1,6 @@
 ﻿<AuthorizeView>
     <Authorized>
-        Hello, @context.User.Identity?.Name!
+        <span class="me-2">Current User:&nbsp;<strong>@context.User.FindFirst("name")?.Value</strong></span>
         <a href="MicrosoftIdentity/Account/SignOut">Log out</a>
     </Authorized>
     <NotAuthorized>

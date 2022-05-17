@@ -25,7 +25,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor()
     .AddMicrosoftIdentityConsentHandler();
 
-builder.Services.AddWebJobsAdmin(connString: builder.Configuration.GetConnectionString("SqlJsonConnection"),
+builder.Services.AddWebJobsAdmin(connectionString: builder.Configuration.GetConnectionString("SqlJsonConnection"),
     logLevel: builder.Configuration.GetValue<LogLevel>("WJbSettings:LogLevel"),
     nThreads: builder.Configuration.GetValue<int>("WJbSettings:NThreads"));
 

@@ -6,8 +6,6 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
 using System.Security.Claims;
 using Telerik.Blazor.Components;
-using UkrGuru.SqlJson;
-
 
 namespace UkrGuru.WebJobs.Admin;
 
@@ -16,10 +14,15 @@ public class WJaAuthComponentBase : ComponentBase
     [CascadingParameter]
     protected Task<AuthenticationState> AuthenticationStateTask { get; set; }
 
+    [Parameter]
+    public string Title { get; set; }
+    
     protected string ErrMsg { get; set; }
 
     protected async Task<ClaimsPrincipal> GetAuthUser() => (await AuthenticationStateTask)?.User;
     protected async Task<string> GetLoginName() => (await GetAuthUser())?.Identity?.Name ?? "Guest";
+
+    protected virtual object ID { get; }
 
     protected virtual async Task InitData() { await Task.CompletedTask; }
     protected virtual async Task LoadData() { await Task.CompletedTask; }
@@ -41,7 +44,7 @@ public class WJaAuthComponentBase : ComponentBase
         catch (Exception ex)
         {
             ErrMsg = $"Error: {ex.Message}";
-            await LogHelper.LogErrorAsync("WJaAuthComponentBase/OnInitializedAsync", new { ex.Message });
+            await LogHelper.LogErrorAsync($"{Title}/OnInitializedAsync", new { ex.Message });
         }
     }
 
@@ -55,7 +58,7 @@ public class WJaAuthComponentBase : ComponentBase
         catch (Exception ex)
         {
             ErrMsg = $"Error: {ex.Message}";
-            await LogHelper.LogErrorAsync("WJaAuthComponentBase/Refresh", new { ex.Message });
+            await LogHelper.LogErrorAsync($"{Title}/Refresh", new { ex.Message });
         }
     }
 
@@ -69,12 +72,12 @@ public class WJaAuthComponentBase : ComponentBase
             await LoadData();
 
             ErrMsg = $"Created successfully.";
-            await LogHelper.LogInformationAsync("WJaAuthComponentBase/CreateHandler", new { Message = ErrMsg });
+            await LogHelper.LogInformationAsync($"{Title}/CreateHandler", new { Message = ErrMsg });
         }
         catch (Exception ex)
         {
             ErrMsg = $"Error: {ex.Message}";
-            await LogHelper.LogErrorAsync("WJaAuthComponentBase/CreateHandler", new { ex.Message });
+            await LogHelper.LogErrorAsync($"{Title}/CreateHandler", new { ex.Message });
         }
     }
 
@@ -88,12 +91,12 @@ public class WJaAuthComponentBase : ComponentBase
             await LoadData();
 
             ErrMsg = $"Updated successfully.";
-            await LogHelper.LogInformationAsync("WJaAuthComponentBase/UpdateHandler", new { Message = ErrMsg });
+            await LogHelper.LogInformationAsync($"{Title}/UpdateHandler", new { ID, Message = ErrMsg });
         }
         catch (Exception ex)
         {
             ErrMsg = $"Error: {ex.Message}";
-            await LogHelper.LogErrorAsync("WJaAuthComponentBase/UpdateHandler", new { ex.Message });
+            await LogHelper.LogErrorAsync($"{Title}/UpdateHandler", new { ID, ex.Message });
         }
     }
 
@@ -107,12 +110,12 @@ public class WJaAuthComponentBase : ComponentBase
             await LoadData();
 
             ErrMsg = $"Deleted successfully.";
-            await LogHelper.LogInformationAsync("WJaAuthComponentBase/DeleteHandler", new { Message = ErrMsg });
+            await LogHelper.LogInformationAsync($"{Title}/DeleteHandler", new { ID, Message = ErrMsg });
         }
         catch (Exception ex)
         {
             ErrMsg = $"Error: {ex.Message}";
-            await LogHelper.LogErrorAsync("WJaAuthComponentBase/DeleteHandler", new { ex.Message });
+            await LogHelper.LogErrorAsync($"{Title}/DeleteHandler", new { ID, ex.Message });
         }
     }
 
@@ -124,12 +127,12 @@ public class WJaAuthComponentBase : ComponentBase
             await SetItemAsync(editContext);
 
             ErrMsg = $"Submit successfully.";
-            await LogHelper.LogInformationAsync("WJaAuthComponentBase/SubmitHandler", new { Message = ErrMsg });
+            await LogHelper.LogInformationAsync($"{Title}/SubmitHandler", new { ID, Message = ErrMsg });
         }
         else
         {
             ErrMsg = $"Error: Invalid Data. Submit canceled.";
-            await LogHelper.LogErrorAsync("WJaAuthComponentBase/SubmitHandler", new { Message = ErrMsg });
+            await LogHelper.LogErrorAsync($"{Title}/SubmitHandler", new { ID, Message = ErrMsg });
         }
     }
 }

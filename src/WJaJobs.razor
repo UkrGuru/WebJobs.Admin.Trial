@@ -6,11 +6,6 @@ Licensed under the MIT License. See License.txt in the project root for license 
 @inherits WJaAuthComponentBase
 @using Microsoft.Extensions.Logging;
 
-@code {
-    [Parameter]
-    public string Title { get; set; } = "Jobs";
-}
-
 <WJaTitleErrMsg Title="@Title" ErrMsg="@ErrMsg" />
 
 <TelerikGrid Data=@GridData ShowColumnMenu="true" Resizable="true" Class="smallerFont">
@@ -24,6 +19,8 @@ Licensed under the MIT License. See License.txt in the project root for license 
         <TelerikNumericTextBox Value="@PageSize" Width="100px"
                                 ValueChanged="@((int i) => PageSizeChangedHandler(i))"></TelerikNumericTextBox>
         <TelerikButton Icon="refresh" OnClick="@Refresh" Title="Refresh" ThemeColor="@(ThemeConstants.Button.ThemeColor.Primary)"></TelerikButton>
+        <span class="k-toolbar-spacer"></span>
+        <GridSearchBox></GridSearchBox>
     </GridToolBar>
     <GridColumns>
         <GridColumn Field=@nameof(Job.JobId) Width="85px" />
@@ -39,7 +36,7 @@ Licensed under the MIT License. See License.txt in the project root for license 
                 @{  
                     var job = context as Job;
                     <span class='badge bg-@(StatusBadge(job.JobStatus))'>@job.JobStatus</span>
-                    if (job.JobStatus == JobStatus.Failed)
+                    if (job?.JobStatus == JobStatus.Failed)
                     {
                         <TelerikButton OnClick="@((args) => RetryJob(job))" ButtonType="ButtonType.Button"
                             Icon="refresh" Title="Retry Job" Class="k-button-small RedText"></TelerikButton>
@@ -47,11 +44,10 @@ Licensed under the MIT License. See License.txt in the project root for license 
                 }
             </Template>
         </GridColumn>
-        <GridColumn Width="45px">
+        <GridColumn Width="45px" ShowColumnMenu="false">
             <Template>
                 @{ 
-                    var job = context as Job; 
-                    <TelerikButton OnClick="@((args) => ViewLogs(job))" ButtonType="ButtonType.Button"
+                    <TelerikButton OnClick="@((args) => ViewLogs(context as Job))" ButtonType="ButtonType.Button"
                         Icon="preview" Title="View Logs" Class="k-button-small"></TelerikButton>
                 }
             </Template>
@@ -102,6 +98,8 @@ Licensed under the MIT License. See License.txt in the project root for license 
 
     string WinTitle { get; set; }
     bool WindowVisible { get { return !string.IsNullOrEmpty(WinTitle); } set { if (!value) WinTitle = null; } }
+
+    protected override async Task InitData() { Title = "Jobs"; await Task.CompletedTask; }
 
     protected override async Task LoadData()
     {
